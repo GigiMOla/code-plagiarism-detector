@@ -37,14 +37,46 @@ async def test_plagiarism(method: str, code: str, language: str = "python"):
 async def run_evaluation():
     """Run evaluation on test cases"""
     test_cases = [
+        # Exact copies (should detect plagiarism)
         {
             "code": "def add(a, b):\n    return a + b",
             "language": "python",
             "expected": True,
-            "description": "Simple addition function"
+            "description": "Simple function - exact copy"
         },
-        # Add more test cases
-    ]
+        
+        # Renamed variables (should detect)
+        {
+            "code": "def sum(x, y):\n    return x + y",
+            "language": "python", 
+            "expected": True,
+            "description": "Renamed variables"
+        },
+        
+        # Different logic (should not detect)
+        {
+            "code": "def multiply(a, b):\n    return a * b",
+            "language": "python",
+            "expected": False,
+            "description": "Different functionality"
+        },
+        
+        # Obfuscated example (should detect)
+        {
+            "code": "def calculate(a, b):\n    result = a + b\n    return result",
+            "language": "python",
+            "expected": True,
+            "description": "Rewritten but same logic"
+        },
+        
+        # Empty code
+        {
+            "code": "",
+            "language": "python",
+            "expected": False,
+            "description": "Empty input"
+        }
+    ]   
     
     methods = ["rag", "llm", "combined"]
     results = []
