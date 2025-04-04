@@ -1,58 +1,106 @@
-version: '3.8'
-
 services:
   frontend:
-    build: ./frontend
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     depends_on:
-      - embedding-service
-      - vector-db
+      embedding-service:
+        condition: service_healthy
+      vector-db:
+        condition: service_healthy
     environment:
       - EMBEDDING_SERVICE_URL=http://embedding-service:8001
       - VECTOR_DB_URL=http://vector-db:8002
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
       - ./frontend:/app
-      - ./config:/config
+      - ./frontend/static:/app/static
+      - ./frontend/templates:/app/templates
+      - ./config:/app/config
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   embedding-service:
-    build: ./embedding-service
+    build: 
+      context: ./embedding-service
+      dockerfile: Dockerfile
     ports:
       - "8001:8001"
     environment:
       - MODEL_NAME=microsoft/codebert-base
+      - HF_HOME=/app/cache
     volumes:
       - ./embedding-service:/app
+      - ./config:/app/config
+      - embedding-cache:/app/cache
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
   vector-db:
-    build: ./vector-db
+    build: 
+      context: ./vector-db
+      dockerfile: Dockerfile
     ports:
       - "8002:8002"
     volumes:
-      - ./vector-db/data:/data
+      - vector-data:/data
       - ./indexing-service/index:/index
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
 
   indexing-service:
-    build: ./indexing-service
+    build: 
+      context: ./indexing-service
+      dockerfile: Dockerfile
     depends_on:
-      - embedding-service
-      - vector-db
+      embedding-service:
+        condition: service_healthy
+      vector-db:
+        condition: service_healthy
     environment:
       - EMBEDDING_SERVICE_URL=http://embedding-service:8001
       - VECTOR_DB_URL=http://vector-db:8002
+      - GIT_CLONE_TIMEOUT=300
     volumes:
       - ./indexing-service:/app
       - ./indexing-service/index:/index
-      - ./config:/config
+      - ./config:/app/config
       - ./indexing-service/repositories:/repositories
+    restart: on-failure
 
   evaluation:
-    build: ./evaluation
+    build: 
+      context: ./evaluation
+      dockerfile: Dockerfile
     depends_on:
-      - frontend
+      frontend:
+        condition: service_healthy
     environment:
       - FRONTEND_URL=http://frontend:8000
+      - RETRY_COUNT=5
+      - RETRY_DELAY=5
     volumes:
       - ./evaluation:/app
+      - ./config:/app/config
       - ./evaluation/results:/results
+    restart: on-failure
+
+volumes:
+  vector-data:
+    driver: local
+  embedding-cache:
+    driver: local
