@@ -41,9 +41,10 @@ services:
       - embedding-cache:/app/cache
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
-      interval: 25s
-      timeout: 30s
-      start_period: 60s
+      interval: 30s  # Increased from 15s
+      timeout: 30s   # Increased from 10s
+      retries: 10    # Increased from 3
+      start_period: 120s 
     restart: unless-stopped
 
   vector-db:
