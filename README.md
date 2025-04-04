@@ -56,7 +56,7 @@ Indexing Service	Repository processing
 Evaluation	Testing framework
 Development 🧑💻
 bash
-Copy
+
 # Rebuild specific service
 docker-compose build <service-name>
 
