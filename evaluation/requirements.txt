@@ -1,0 +1,7 @@
+httpx==0.24.1
+pandas==2.0.3  # For evaluation metrics
+python-dotenv==1.0.0
+tqdm==4.65.0
+numpy==1.24.3
+scikit-learn==1.3.0  # For similarity metrics
+openai==0.27.8  # For LLM evaluation
