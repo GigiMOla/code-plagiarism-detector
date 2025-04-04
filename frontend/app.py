@@ -20,6 +20,11 @@ async def home(request: Request):
         "languages": list(LANGUAGE_CONFIG.keys())
     })
 
+# In each service's app.py
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
+
 @app.post("/check")
 async def check_plagiarism(request: Request, code: str = Form(...), language: str = Form(...)):
     try:

@@ -18,6 +18,13 @@ tokenizer = None
 model = None
 device = None
 
+
+# In each service's app.py
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
+
+
 @app.on_event("startup")
 async def load_model():
     global tokenizer, model, device

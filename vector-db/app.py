@@ -19,6 +19,12 @@ class VectorSearchRequest(BaseModel):
 index = None
 metadata = []
 
+
+# In each service's app.py
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
+
 @app.on_event("startup")
 async def load_index():
     global index, metadata
