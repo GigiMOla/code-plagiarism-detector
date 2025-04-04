@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - embedding-service
+      - vector-db
+    environment:
+      - EMBEDDING_SERVICE_URL=http://embedding-service:8001
+      - VECTOR_DB_URL=http://vector-db:8002
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - ./frontend:/app
+      - ./config:/config
+
+  embedding-service:
+    build: ./embedding-service
+    ports:
+      - "8001:8001"
+    environment:
+      - MODEL_NAME=microsoft/codebert-base
+    volumes:
+      - ./embedding-service:/app
+
+  vector-db:
+    build: ./vector-db
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./vector-db/data:/data
+      - ./indexing-service/index:/index
+
+  indexing-service:
+    build: ./indexing-service
+    depends_on:
+      - embedding-service
+      - vector-db
+    environment:
+      - EMBEDDING_SERVICE_URL=http://embedding-service:8001
+      - VECTOR_DB_URL=http://vector-db:8002
+    volumes:
+      - ./indexing-service:/app
+      - ./indexing-service/index:/index
+      - ./config:/config
+      - ./indexing-service/repositories:/repositories
+
+  evaluation:
+    build: ./evaluation
+    depends_on:
+      - frontend
+    environment:
+      - FRONTEND_URL=http://frontend:8000
+    volumes:
+      - ./evaluation:/app
+      - ./evaluation/results:/results
