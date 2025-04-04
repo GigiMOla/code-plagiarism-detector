@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Results - Plagiarism Detector</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Plagiarism Detection Results</h1>
+        
+        <div class="section">
+            <h2>Your {{ language|title }} Code</h2>
+            <pre><code>{{ input_code }}</code></pre>
+        </div>
+
+        <div class="verdict {% if plagiarized %}danger{% else %}success{% endif %}">
+            <h2>{% if plagiarized %}⚠️ Potential Plagiarism Detected{% else %}✓ Unique Implementation{% endif %}</h2>
+            {% if top_similarity is defined %}
+            <p>Highest similarity score: {{ "%.2f"|format(top_similarity) }}</p>
+            {% endif %}
+        </div>
+
+        {% if results %}
+        <div class="matches">
+            <h3>Potential Matches Found ({{ results|length }})</h3>
+            <p>Similarity threshold: {{ similarity_threshold }}</p>
+            
+            <div class="match-list">
+                {% for result in results %}
+                <div class="match">
+                    <div class="file-reference">
+                        <strong>File:</strong> {{ result.file }}
+                        <span class="similarity-badge">{{ "%.2f"|format(result.similarity) }}</span>
+                    </div>
+                    <div class="code-comparison">
+                        <div class="code-column">
+                            <h4>Your Code</h4>
+                            <pre>{{ input_code[:200] }}{% if input_code|length > 200 %}...{% endif %}</pre>
+                        </div>
+                        <div class="code-column">
+                            <h4>Matched Code</h4>
+                            <pre>{{ result.code[:200] }}{% if result.code|length > 200 %}...{% endif %}</pre>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="alert success">
+            <p>No significant matches found in our codebase.</p>
+        </div>
+        {% endif %}
+        
+        <a href="/" class="button">Check Another Code</a>
+    </div>
+</body>
+</html>

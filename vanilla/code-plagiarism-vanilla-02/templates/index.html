@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Code Plagiarism Checker</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Multi-Language Plagiarism Detector</h1>
+        
+        <form method="post" action="/check">
+            <div class="form-group">
+                <label for="language">Programming Language:</label>
+                <select id="language" name="language" required>
+                    {% for lang in languages %}
+                    <option value="{{ lang }}">{{ lang|title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="method">Detection Method:</label>
+                <select id="method" name="method" required>
+                    <option value="rag">Vector Search Only</option>
+                    <option value="llm">LLM Only</option>
+                    <option value="combined" selected>Combined (Recommended)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="code">Paste Your Code:</label>
+                <textarea id="code" name="code" rows="15" required></textarea>
+            </div>
+            
+            <button type="submit">Check for Plagiarism</button>
+        </form>
+    </div>
+</body>
+</html>
