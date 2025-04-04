@@ -23,22 +23,32 @@ metadata = []
 # In each service's app.py
 @app.get("/health")
 def health_check():
+    if index is None:
+        raise HTTPException(status_code=503, detail="Index not initialized")
     return {"status": "healthy"}
 
 @app.on_event("startup")
 async def load_index():
     global index, metadata
-    index_path = "/index/embeddings.faiss"
-    metadata_path = "/index/metadata.pkl"
-    
-    if os.path.exists(index_path):
-        index = faiss.read_index(index_path)
-        with open(metadata_path, "rb") as f:
-            metadata = pickle.load(f)
-    else:
-        # Create new empty index
-        index = faiss.IndexFlatIP(768)  # Default size for codebert
-        os.makedirs("/index", exist_ok=True)
+    try:
+        index_path = "/index/embeddings.faiss"
+        metadata_path = "/index/metadata.pkl"
+        
+        if os.path.exists(index_path):
+            index = faiss.read_index(index_path)
+            with open(metadata_path, "rb") as f:
+                metadata = pickle.load(f)
+        else:
+            # Create new empty index
+            index = faiss.IndexFlatIP(768)
+            os.makedirs("/index", exist_ok=True)
+            # Save empty index
+            faiss.write_index(index, index_path)
+            with open(metadata_path, "wb") as f:
+                pickle.dump([], f)
+    except Exception as e:
+        print(f"Failed to initialize index: {str(e)}")
+        raise
 
 @app.post("/add")
 async def add_vector(request: VectorAddRequest):
